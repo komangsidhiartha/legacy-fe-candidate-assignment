@@ -3,7 +3,6 @@ import cors = require('cors');
 import {ethers} from 'ethers';
 
 const app = express();
-const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(express.json());
@@ -23,6 +22,4 @@ app.post('/verify-signature', (req, res) => {
 //     res.send('Hello World');
 // });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+export default app;
