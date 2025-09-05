@@ -1,22 +1,36 @@
-import React, {useEffect, useState} from 'react';
-import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
-import { getSigner } from '@dynamic-labs/ethers-v6';
-import { useConnectWithOtp } from '@dynamic-labs/sdk-react-core';
+// @ts-ignore
+import React, {MouseEventHandler, useEffect, useState} from 'react'
+import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
+import { getSigner } from '@dynamic-labs/ethers-v6'
+import { useConnectWithOtp } from '@dynamic-labs/sdk-react-core'
+import Button from "./components/Button"
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "./components/Card"
+import Badge from "./components/Badge"
+import TextArea from "./components/TextArea"
 
 interface SignedMessage {
-  message: string;
-  signature: string;
-  signer: string;
-  isValid: boolean;
-  copied: boolean;
+  message: string
+  signature: string
+  signer: string
+  isValid: boolean
+  copied: boolean
+}
+
+interface Toast {
+  id: number
+  variant: string
+  title: string
+  description: string
 }
 
 const useToast = () => {
-  const [toasts, setToasts] = useState([])
+  const [toasts, setToasts] = useState<Toast[]>([])
 
+  // @ts-ignore
   const toast = ({ title, description, variant = 'default' }) => {
     const id = Date.now()
     const newToast = { id, title, description, variant }
+    // @ts-ignore
     setToasts((prev) => [...prev, newToast])
 
     setTimeout(() => {
@@ -38,44 +52,7 @@ const useToast = () => {
   return { toast, ToastContainer }
 }
 
-// UI Components
-const Button = ({ children, onClick, disabled, variant = 'primary', size = 'md', className = '', ...props }) => (
-  <button className={`btn btn-${variant} btn-${size} ${className}`} onClick={onClick} disabled={disabled} {...props}>
-    {children}
-  </button>
-)
-
-const Card = ({ children, className = '' }) => <div className={`card ${className}`}>{children}</div>
-
-const CardHeader = ({ children }) => <div className='card-header'>{children}</div>
-
-const CardTitle = ({ children, className = '' }) => <h3 className={`card-title ${className}`}>{children}</h3>
-
-const CardDescription = ({ children }) => <p className='card-description'>{children}</p>
-
-const CardContent = ({ children, className = '' }) => <div className={`card-content ${className}`}>{children}</div>
-
-const Textarea = ({ value, onChange, placeholder, className = '', ...props }) => (
-  <textarea
-    className={`textarea ${className}`}
-    value={value}
-    onChange={onChange}
-    placeholder={placeholder}
-    {...props}
-  />
-)
-
-const Badge = ({ children, variant = 'default', className = '' }) => (
-  <span className={`badge badge-${variant} ${className}`}>{children}</span>
-)
-
 // Icons (simple SVG implementations)
-const WalletIcon = () => (
-  <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-    <path d='M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1' />
-    <path d='M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4' />
-  </svg>
-)
 
 const LogOutIcon = () => (
   <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
@@ -106,104 +83,109 @@ const CheckIcon = () => (
 
 
 function App() {
-  const { connectWithEmail, verifyOneTimePassword } = useConnectWithOtp();
-  const { primaryWallet, handleLogOut } = useDynamicContext();
-  const [message, setMessage] = useState('');
+  const backendUrl = import.meta.env.VITE_BACKEND_URL
+  const { connectWithEmail, verifyOneTimePassword } = useConnectWithOtp()
+  const { primaryWallet, handleLogOut } = useDynamicContext()
+  const [message, setMessage] = useState('')
   const [history, setHistory] = useState<SignedMessage[]>(() => {
     // Lazy initialization: runs only once
-    const saved = localStorage.getItem('signedHistory');
-    return saved ? JSON.parse(saved) : [];
-  });
+    const saved = localStorage.getItem('signedHistory')
+    return saved ? JSON.parse(saved) : []
+  })
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [email, setEmail] = useState('');
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isSubmittingEmail, setIsSubmittingEmail] = useState(false);
+  const [isLoading, setIsLoading] = useState(false)
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
+  const [email, setEmail] = useState('')
+  const [isSubmittingEmail, setIsSubmittingEmail] = useState(false)
 
-  const { toast, ToastContainer } = useToast();
+  const { toast, ToastContainer } = useToast()
 
   useEffect(() => {
-    localStorage.setItem('signedHistory', JSON.stringify(history));
+    localStorage.setItem('signedHistory', JSON.stringify(history))
 
-  }, [history]);
+  }, [history])
 
 
   const handleSign = async () => {
-    if (!message || !primaryWallet) return;
+    if (!message || !primaryWallet) return
 
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const signer = await getSigner(primaryWallet);
-      const signature = await signer.signMessage(message);
+      const signer = await getSigner(primaryWallet)
+      const signature = await signer.signMessage(message)
 
-      const res = await fetch('http://localhost:5001/verify-signature', {
+      const res = await fetch(`${backendUrl}/verify-signature`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, signature }),
-      });
+      })
 
-      const data = await res.json();
-      setHistory([{ message, signature, signer: data.signer, isValid: data.isValid }, ...history]);
+      const data = await res.json()
+      setHistory([{ message, signature, signer: data.signer, isValid: data.isValid, copied: false }, ...history])
     } catch (error) {
-      console.error('Error signing message:', error);
+      console.error('Error signing message:', error)
     }
-    setMessage('');
-    setIsLoading(false);
-  };
+    setMessage('')
+    setIsLoading(false)
+  }
 
+  // @ts-ignore
   const handleLogin = async (event) => {
-    setIsLoggingIn(true);
+    setIsLoggingIn(true)
     try {
-      event.preventDefault();
+      event.preventDefault()
 
-      const email = event.currentTarget.email.value;
+      const email = event.currentTarget.email.value
 
-      await connectWithEmail(email);
+      await connectWithEmail(email)
       toast({
         title: 'Login',
         description: 'Check your inbox for login code!',
       })
-      setEmail(email);
-      setIsSubmittingEmail(true);
+      setEmail(email)
+      setIsSubmittingEmail(true)
     } catch (err) {
-      console.error('Login failed:', err);
+      console.error('Login failed:', err)
     }
-    setIsLoggingIn(false);
+    setIsLoggingIn(false)
   }
 
+  // @ts-ignore
   const handleOtp = async (event) => {
     try {
-      event.preventDefault();
+      event.preventDefault()
 
-      const otp = event.currentTarget.otp.value;
+      const otp = event.currentTarget.otp.value
 
-      await verifyOneTimePassword(otp);
+      await verifyOneTimePassword(otp)
       toast({
         title: 'Login',
         description: 'Logged in successfully',
-      });
-      setIsSubmittingEmail(false);
+      })
+      setIsSubmittingEmail(false)
     } catch (err) {
-      console.error('Login failed:', err);
+      console.error('Login failed:', err)
     }
   }
 
   const logOut = async () => {
     try {
-      setIsLoggingOut(true);
-      await handleLogOut();
+      await handleLogOut()
       toast({
         title: 'Log Out',
         description: 'You are logged out',
-      });
-      setIsLoggingOut(false);
+      })
     } catch (err) {
-      console.error('Login failed:', err);
+      console.error('Login failed:', err)
     }
   }
 
-  const copyToClipboard = async (index) => {
+  // @ts-ignore
+  const onMessageChange = (event) => {
+    setMessage(event.target.value)
+  }
+
+  const copyToClipboard = async (index: number) => {
     await navigator.clipboard.writeText(history[index].signature)
     history[index].copied = true
     setTimeout(() => history[index].copied = false, 2000)
@@ -213,6 +195,7 @@ function App() {
     })
   }
 
+  // @ts-ignore
   return (
     <div className='app'>
       <ToastContainer />
@@ -232,7 +215,7 @@ function App() {
               <Badge variant='secondary' className='wallet-badge'>
                 {primaryWallet.address.slice(0, 6)}...{primaryWallet.address.slice(-4)}
               </Badge>
-              <Button variant='outline' size='sm' onClick={logOut} className='disconnect-btn bg-transparent'>
+              <Button disabled={false} variant='outline' size='sm' onClick={logOut} className='disconnect-btn bg-transparent'>
                 <LogOutIcon />
                 Disconnect
               </Button>
@@ -263,14 +246,14 @@ function App() {
                   <form className='' key='email-form' onSubmit={handleLogin}>
                     <input className='email-input' type='email' name='email' placeholder='Email'
                            disabled={isSubmittingEmail}/>
-                    <Button type='submit' size='lg' className='connect-btn'>Submit</Button>
-                  </form>}
-
+                    <Button type='submit' onClick={() => {}} size='lg' className='connect-btn' disabled={isSubmittingEmail}>Submit</Button>
+                  </form>
+                }
                 {isSubmittingEmail &&
                   <form key='otp-form' onSubmit={handleOtp}>
                     <p>{email}</p>
                     <input className='text-input' type='text' name='otp' placeholder='OTP' disabled={!isSubmittingEmail} />
-                    <Button type='submit' size='lg' className='connect-btn'>Submit</Button>
+                    <Button onClick={() => {}} disabled={!isSubmittingEmail} type='submit' size='lg' className='connect-btn'>Submit</Button>
                   </form>
                 }
               </div>
@@ -297,11 +280,11 @@ function App() {
                   <label htmlFor='message' className='input-label'>
                     Message to Sign
                   </label>
-                  <Textarea
+                  <TextArea
                     id='message'
                     placeholder='Enter your message here...'
                     value={message}
-                    onChange={(e) => setMessage(e.target.value)}
+                    onChange={onMessageChange}
                     className='message-textarea'
                   />
                 </div>
@@ -336,7 +319,7 @@ function App() {
                       <p><strong>Signer:</strong> {h.signer}</p>
                       <p><strong>Valid:</strong> {h.isValid ? '✅' : '❌'}</p>
                     </div>
-                    <Button variant='outline' size='sm' onClick={() => copyToClipboard(i)} className='copy-btn bg-transparent'>
+                    <Button disabled={false} variant='outline' size='sm' onClick={() => copyToClipboard(i)} className='copy-btn bg-transparent'>
                       {h.copied ? (
                         <>
                           <CheckIcon />
@@ -357,7 +340,7 @@ function App() {
         )}
       </main>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
