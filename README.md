@@ -88,6 +88,13 @@ For local development, create a .env file in each folder.
 
 ### 📖 Notes
 - Bonus requirement met: Deployed FE (Vercel) + BE (Render).
-- The frontend-vite implementation includes modern tooling with Vite and comprehensive test setup.
-- If backend sleeps on free Render plan, first request may take a few seconds.
+- The frontend-vite implementation includes modern tooling with Vite and a basic test setup.
+- If backend sleeps on the free Render plan, the first request may take a few seconds.
 - Project structured for easy local development & deployment.
+
+**Trade-offs & Areas for Improvement**
+- **Headless Dynamic Auth:** Implemented via `useConnectWithOtp` for a lean integration. A full UI kit would provide faster onboarding but less control.
+- **Persistence:** Used `localStorage` for simplicity; a more robust state management solution (e.g., Redux Toolkit or Zustand) could improve scalability.
+- **Styling:** Minimal CSS to keep dependencies light. Could be improved with TailwindCSS or a design system for a more polished UI.
+- **Tests:** Added basic unit tests with Vitest. More thorough integration tests and mocking of Dynamic SDK would further increase confidence.
+- **Backend Hosting:** Render free tier was chosen for simplicity. A production-grade deployment should use a paid tier with autoscaling.
