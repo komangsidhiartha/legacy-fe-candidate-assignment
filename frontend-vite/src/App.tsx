@@ -206,7 +206,7 @@ function App() {
             <div className='logo'>
               <ShieldIcon />
             </div>
-            <h1 className='app-title'>SignatureVault</h1>
+            <h1 className='app-title'>SignatureVault - Web3 Message Signer Rehearsal</h1>
           </div>
 
           {primaryWallet && (

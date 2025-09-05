@@ -6,13 +6,13 @@
 ---
 
 ## 📦 Project Structure
-- /frontend   → React app (deployed on Vercel)
-- /backend    → Express + TypeScript API (deployed on Render)
+- `/frontend-vite` → Modern Vite + React + TypeScript app (deployed on Vercel)
+- `/backend`    → Express + TypeScript API (deployed on Render)
 
 ---
 
 ## ⚡ Tech Stack
-- Frontend: React, TypeScript, Vercel
+- Frontend (Vite): React 19, TypeScript, Vite, Vitest, Testing Library
 - Backend: Express, TypeScript, Render
 
 ---
@@ -30,7 +30,7 @@ cd legacy-fe-candidate-assignment
 
 #### Frontend:
 ```bash
-cd frontend
+cd frontend-vite
 npm install
 npm run dev   # runs on http://localhost:5173
 ```
@@ -44,13 +44,41 @@ npm run dev   # runs on http://localhost:4000
 
 ---
 
+### 🧪 Testing
+
+#### Frontend (Vite):
+```bash
+cd frontend-vite
+# Run tests
+npm run test
+
+# Generate test coverage
+npm run test:coverage
+
+# Run tests with UI
+npm run test:ui
+```
+
+#### Backend:
+```bash
+cd backend
+npm run test
+```
+
+---
+
 ### 🔑 Environment Variables
-#### Frontend (Vercel)
+#### Frontend
 ```bash
 VITE_BACKEND_URL=https://legacy-fe-candidate-assignment-1gx8.onrender.com
 ```
+or 
 
-#### Backend (Render)
+```bash
+VITE_BACKEND_URL=http://localhost:4000  # for local development
+```
+
+#### Backend
 ```bash
 PORT=4000
 ```
@@ -58,15 +86,8 @@ For local development, create a .env file in each folder.
 
 ---
 
-### 🧪 Testing
-Currently minimal:
-```bash
-npm run test
-```
-
----
-
 ### 📖 Notes
 - Bonus requirement met: Deployed FE (Vercel) + BE (Render).
+- The frontend-vite implementation includes modern tooling with Vite and comprehensive test setup.
 - If backend sleeps on free Render plan, first request may take a few seconds.
-- Project structured for easy local dev & deployment.
+- Project structured for easy local development & deployment.
